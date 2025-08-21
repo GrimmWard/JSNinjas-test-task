@@ -51,38 +51,46 @@ router.get('/hero/:id', async(req, res) => {
         res.status(500).json({message: error.message})
     }
 })
-router.put('/edit/:id', upload.array("images"), async(req, res) => {
+
+
+router.put('/edit/:id', upload.array("images"), async (req, res) => {
     try {
-        const { nickname, real_name, origin_description, catch_phrase, superpowers, existingImages } = req.body;
         const hero = await Superhero.findById(req.params.id);
         if (!hero) return res.status(404).json({ message: "Superhero not found" });
 
-        // Видаляємо картинки, яких більше немає
-        const imagesToDelete = hero.images.filter(img => !existingImages.includes(img));
-        imagesToDelete.forEach(imgPath => {
-            fs.unlink(imgPath, err => { if(err) console.log(err); });
+        const existingImages = Array.isArray(req.body.existingImages)
+            ? req.body.existingImages
+            : [req.body.existingImages].filter(Boolean); // якщо один елемент, робимо масив
+
+        // Видалення старих картинок, яких немає в existingImages
+        hero.images.forEach(img => {
+            if (!existingImages.includes(img)) {
+                const filePath = path.join("uploads", path.basename(img));
+                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            }
         });
 
-        // Збираємо новий масив картинок
-        let updatedImages = [...existingImages];
-        if (req.files && req.files.length > 0) {
-            updatedImages.push(...req.files.map(f => f.path));
-        }
+        const newImages = req.files ? req.files.map(f => f.path) : [];
 
-        // Оновлюємо
-        hero.nickname = nickname;
-        hero.real_name = real_name;
-        hero.origin_description = origin_description;
-        hero.catch_phrase = catch_phrase;
-        hero.superpowers = superpowers;
-        hero.images = updatedImages;
+        hero.nickname = req.body.nickname;
+        hero.real_name = req.body.real_name;
+        hero.origin_description = req.body.origin_description || "";
+        hero.catch_phrase = req.body.catch_phrase || "";
+        hero.superpowers = req.body.superpowers || "";
+        hero.images = [...existingImages, ...newImages];
+
+        if (hero.images.length === 0) {
+            return res.status(400).json({ message: "At least one image is required" });
+        }
 
         await hero.save();
         res.json(hero);
-    } catch(err) {
-        res.status(500).json({message: err.message});
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 });
+
+
 router.delete('/deleteHero/:id', async (req, res) => {
     try {
         const hero = await Superhero.findById(req.params.id);
@@ -112,6 +120,8 @@ router.delete('/deleteHero/:id', async (req, res) => {
     }
 });
 
+
+// Dev route
 router.delete('/deleteAll', async (req, res) => {
     try {
         const heroes = await Superhero.find();

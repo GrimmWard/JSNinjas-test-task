@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getHeroById } from "../api/superheroes";
+import {BASE_URL} from "../api/config.js";
 
 export default function SuperheroPage() {
     const { id } = useParams();
@@ -29,12 +30,12 @@ export default function SuperheroPage() {
 
     return (
         <div style={{ maxWidth: "900px", margin: "2rem auto", padding: "1rem" }}>
-            {/* Header */}
+
             <h1 style={{ textAlign: "center", fontSize: "2.5rem", marginBottom: "1rem" }}>
                 {hero.nickname}
             </h1>
 
-            {/* Images Gallery */}
+
             <div
                 style={{
                     display: "flex",
@@ -47,7 +48,7 @@ export default function SuperheroPage() {
                 {hero.images.map((img, index) => (
                     <img
                         key={index}
-                        src={`http://localhost:3000/${img.replace(/\\/g, "/")}`}
+                        src={`${BASE_URL}/${img.replace(/\\/g, "/")}`}
                         alt={`${hero.nickname} ${index + 1}`}
                         style={{
                             width: "200px",
@@ -63,7 +64,7 @@ export default function SuperheroPage() {
                 ))}
             </div>
 
-            {/* Info Section */}
+
             <div
                 style={{
                     background: "#f8f8f8",
@@ -75,12 +76,12 @@ export default function SuperheroPage() {
                 }}
             >
                 <p><strong>Real Name:</strong> {hero.real_name}</p>
-                <p><strong>Origin:</strong> {hero.origin_description}</p>
+                <p><strong>Origin Description:</strong> {hero.origin_description}</p>
                 <p><strong>Catch Phrase:</strong> {hero.catch_phrase}</p>
                 <p><strong>Superpowers:</strong> {hero.superpowers}</p>
             </div>
 
-            {/* Edit Button */}
+
             <div style={{ textAlign: "center", marginTop: "2rem" }}>
                 <button
                     onClick={() => navigate(`/edit/${hero._id}`)}

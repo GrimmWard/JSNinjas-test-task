@@ -1,8 +1,6 @@
-import { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import {useState} from "react";
+import {useNavigate} from "react-router-dom";
+import {createHero} from "../api/superheroes.js";
 
 
 export default function CreateHeroPage() {
@@ -16,10 +14,10 @@ export default function CreateHeroPage() {
         catch_phrase: "",
     });
     const [images, setImages] = useState([]);
-    const [preview, setPreview] = useState([]); // для відображення
+    const [preview, setPreview] = useState([]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setFormData({...formData, [e.target.name]: e.target.value});
     };
 
     const handleFileChange = (e) => {
@@ -35,29 +33,48 @@ export default function CreateHeroPage() {
         setPreview((prev) => prev.filter((_, i) => i !== index));
     };
 
+    const isValidText = (text) => {
+        return /^[a-zA-Zа-яА-ЯёЁіІїЇєЄ\s]+$/.test(text);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (
+            !isValidText(formData.nickname) ||
+            !isValidText(formData.real_name) ||
+            (formData.catch_phrase && !isValidText(formData.catch_phrase)) ||
+            (formData.superpowers && !isValidText(formData.superpowers))
+        ) {
+            alert("Text fields can contain only letters and spaces!");
+            return;
+        }
+
+        if (images.length === 0) {
+            alert("You must upload at least one image!");
+            return;
+        }
+
+
         try {
+
             const data = new FormData();
             Object.keys(formData).forEach((key) => data.append(key, formData[key]));
             images.forEach((img) => data.append("images", img));
 
-            await axios.post(`${API_URL}/create`, data, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
+            await createHero(data);
 
-            alert("Героя створено успішно!");
+            alert("Hero is successfully created!");
             navigate("/");
         } catch (err) {
             console.error(err);
-            alert("Помилка при створенні героя!");
+            alert("Error when adding hero!");
         }
     };
 
     return (
-        <div style={{ maxWidth: "600px", margin: "0 auto" }}>
-            <h2 style={{ marginBottom: "20px", fontSize: "24px" }}>Add new Hero</h2>
+        <div style={{maxWidth: "600px", margin: "0 auto"}}>
+            <h2 style={{marginBottom: "20px", fontSize: "24px"}}>Add new Hero</h2>
             <form
                 onSubmit={handleSubmit}
                 encType="multipart/form-data"
@@ -137,11 +154,11 @@ export default function CreateHeroPage() {
 
                 <div>
                     <label
-                        style={{ fontSize: "16px", marginBottom: "8px", display: "block" }}
+                        style={{fontSize: "16px", marginBottom: "8px", display: "block"}}
                     >
                         Images:
                     </label>
-                    <input type="file" multiple onChange={handleFileChange}  />
+                    <input type="file" multiple onChange={handleFileChange}/>
                 </div>
 
                 <div
@@ -206,7 +223,7 @@ export default function CreateHeroPage() {
                         cursor: "pointer",
                     }}
                 >
-                    Створити
+                    Add Hero
                 </button>
             </form>
         </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAllHeroes } from "../api/superheroes";
+import {BASE_URL} from "../api/config.js";
 
 export default function HomePage() {
     const [heroes, setHeroes] = useState([]);
@@ -74,7 +75,7 @@ export default function HomePage() {
                         >
                             {hero.images && hero.images[0] ? (
                                 <img
-                                    src={`http://localhost:3000/${hero.images[0].replace(/\\/g, "/")}`}
+                                    src={`${BASE_URL}/${hero.images[0].replace(/\\/g, "/")}`}
                                     alt={hero.nickname}
                                     style={{
                                         width: "100%",
@@ -127,7 +128,7 @@ export default function HomePage() {
                 </div>
             )}
 
-            {/* Пагінація */}
+
             <div
                 style={{
                     marginTop: "2rem",

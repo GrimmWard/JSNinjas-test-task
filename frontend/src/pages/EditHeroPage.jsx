@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import {deleteHero, getHeroById, updateHero} from "../api/superheroes.js";
+import {BASE_URL} from "../api/config.js";
 
-const API_URL = import.meta.env.VITE_API_URL;
 
 export default function EditHeroPage() {
     const { id } = useParams();
@@ -17,8 +17,8 @@ export default function EditHeroPage() {
     useEffect(() => {
         const fetchHero = async () => {
             try {
-                const res = await axios.get(`${API_URL}/hero/${id}`);
-                setHero(res.data);
+                const res = await getHeroById(id);
+                setHero(res);
             } catch (err) {
                 setError(err.message || "Error fetching hero");
             } finally {
@@ -51,50 +51,72 @@ export default function EditHeroPage() {
     };
 
     const handleDeleteOldImage = (imageName) => {
-        if (!window.confirm("Точно видалити цю картинку?")) return;
-        setHero(prev => ({
-            ...prev,
-            images: prev.images.filter(img => img !== imageName)
-        }));
+        if (!window.confirm("Are you sure?")) return;
+
+        setHero(prev => {
+            const updatedImages = prev.images.filter(img => img !== imageName);
+            if (updatedImages.length + newImages.length === 0) {
+                alert("At least one image is required");
+                return prev;
+            }
+            return { ...prev, images: updatedImages };
+        });
     };
 
     const handleDeleteHero = async () => {
-        if (!window.confirm("Точно видалити героя?")) return;
+        if (!window.confirm("Is it accurate to delete a character?")) return;
         try {
-            await axios.delete(`${API_URL}/deleteHero/${id}`);
+            await deleteHero(id);
             navigate("/");
         } catch (err) {
             alert(err.message || "Error deleting hero");
         }
     };
 
-    const handleSave = async () => {
+    const isValidText = (text) => {
+        return /^[a-zA-Zа-яА-ЯёЁіІїЇєЄ\s]+$/.test(text);
+    };
 
-        if (hero.images.length === 0 && newImages.length === 0) {
-            alert("Hero must have at least one image!");
-            return;
-        }
+    const handleSave = async () => {
         setSaving(true);
         try {
+            if (hero.images.length + newImages.length === 0) {
+                alert("At least one image is required");
+                return;
+            }
+
+            if (
+                !isValidText(hero.nickname) ||
+                !isValidText(hero.real_name) ||
+                (hero.catch_phrase && !isValidText(hero.catch_phrase)) ||
+                (hero.superpowers && !isValidText(hero.superpowers))
+            ) {
+                alert("Text fields can contain only letters and spaces!");
+                return;
+            }
+
+
+
             const formData = new FormData();
             formData.append("nickname", hero.nickname);
             formData.append("real_name", hero.real_name);
             formData.append("origin_description", hero.origin_description || "");
             formData.append("catch_phrase", hero.catch_phrase || "");
-            // тепер суперсили просто рядок
-            formData.append("superpowers", hero.superpowers || "");
+            formData.append("superpowers", hero.superpowers);
+
+
             hero.images.forEach(img => formData.append("existingImages", img));
+
+
             newImages.forEach(imgObj => formData.append("images", imgObj.file));
 
-            const res = await axios.put(`${API_URL}/edit/${id}`, formData, {
-                headers: { "Content-Type": "multipart/form-data" }
-            });
+            const res = await updateHero(id, formData);
 
-            setHero(res.data);
+            setHero(res);
             setNewImages([]);
             alert("Hero updated successfully!");
         } catch (err) {
-            alert(err.message || "Error updating hero");
+            alert(err.response?.data?.message || err.message || "Error updating hero");
         } finally {
             setSaving(false);
         }
@@ -126,7 +148,7 @@ export default function EditHeroPage() {
                 </label>
 
                 <label>
-                    Superpowers (тут просто рядок):
+                    Superpowers:
                     <input name="superpowers" value={hero.superpowers || ""} onChange={handleChange} style={{ width: "100%", padding: "0.5rem", fontSize: "1rem", borderRadius: "6px" }} />
                 </label>
             </div>
@@ -137,7 +159,7 @@ export default function EditHeroPage() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
                 {hero.images.map((img, idx) => (
                     <div key={idx} style={{ position: "relative" }}>
-                        <img src={`http://localhost:3000/${img.replace(/\\/g, "/")}`} alt={`${hero.nickname} ${idx}`} width={150} style={{ borderRadius: "6px", objectFit: "cover" }} />
+                        <img src={`${BASE_URL}/${img.replace(/\\/g, "/")}`} alt={`${hero.nickname} ${idx}`} width={150} style={{ borderRadius: "6px", objectFit: "cover" }} />
                         <button
                             onClick={() => handleDeleteOldImage(img)}
                             style={{ position: "absolute", top: 0, right: 0, background: "red", color: "#fff", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer" }}>
