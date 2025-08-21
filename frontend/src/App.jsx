@@ -1,17 +1,14 @@
-import { Routes, Route, Link } from "react-router";
+import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import SuperheroPage from "./pages/SuperheroPage";
 import CreateHeroPage from "./pages/CreateHeroPage.jsx";
 import EditHeroPage from "./pages/EditHeroPage";
+import Navbar from "./components/Navbar"; // 👈 підключаємо
 
 function App() {
     return (
         <div>
-            <nav style={{ padding: "1rem", background: "#eee" }}>
-                <Link to="/">Home</Link> |{" "}
-                <Link to="/create">Create Hero</Link>
-            </nav>
-
+            <Navbar />
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/superheroes/:id" element={<SuperheroPage />} />
