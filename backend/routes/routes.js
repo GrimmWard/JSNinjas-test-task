@@ -60,9 +60,9 @@ router.put('/edit/:id', upload.array("images"), async (req, res) => {
 
         const existingImages = Array.isArray(req.body.existingImages)
             ? req.body.existingImages
-            : [req.body.existingImages].filter(Boolean); // якщо один елемент, робимо масив
+            : [req.body.existingImages].filter(Boolean);
 
-        // Видалення старих картинок, яких немає в existingImages
+
         hero.images.forEach(img => {
             if (!existingImages.includes(img)) {
                 const filePath = path.join("uploads", path.basename(img));
